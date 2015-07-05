@@ -157,9 +157,9 @@ class Element {
 	remove($v)
 	{
 		if ($this->is_set())
-			return;
+			return false;
 		if ($this->value[$v] === NULL)
-			return;
+			return false;
 		$this->value[$v] = NULL;	// XXX
 		$this->modified();
 		$this->log->info("Remove $v on ({$this->x},{$this->y})\n");
@@ -168,12 +168,14 @@ class Element {
 		for ($i = 0; $i < $this->max; $i++)
 			if ($this->value[$i] !== NULL) {
 				if ($left !== NULL)
-					return;
+					goto out;
 				$left = $i;
 			}
 		if ($left === NULL)
 			throw new BadMethodCallException();
 		$this->set($left);
+  out:
+		return true;
 	}
 
 	public function
@@ -241,7 +243,7 @@ class Matrix {
 	set($x, $y, $v)
 	{
 		$e = $this->get($x, $y);
-		$e->set($v);
+		$isset = $e->set($v);
 		if ($this->log->is_logging(Log::DEBUG))
 			$this->dump();
 	}
@@ -252,12 +254,12 @@ class Matrix {
 		if (! is_array($vs))
 			$vs = array($vs);
 		foreach ($vs as $v) {
-			$e->remove($v);
+			$isremoved = $e->remove($v);
+			if ($isremoved && $this->log->is_logging(Log::DEBUG))
+				$this->dump();
 			// XXX: should look into another element when
 			//	its value is set?
 		}
-		if ($this->log->is_logging(Log::DEBUG))
-			$this->dump();
 	}
 
 	private function
@@ -304,9 +306,9 @@ class Matrix {
 		$e = $samelist[0];
 		$xory = $is_row ? $e->x() : $e->y();
 		$v = $e->get_array_without_null();
-		$this->log->info('Pruning ' . ($is_row ? 'row' : 'column') .
-		    ' ' . $e->to_s() .
-		    ' on (' . $e->x() . ',' . $e->y() . ")\n");
+		$this->log->info('Pruning ' . $e->to_s() .
+		    ' in ' . ($is_row ? 'row' : 'column') . ' for (' .
+		    $e->x() . ',' . $e->y() . ")\n");
 		for ($i = 0; $i < $this->width; $i++) {
 			if ($is_row)
 				$other = $this->get($xory, $i);
@@ -346,8 +348,8 @@ class Matrix {
 		$xbase = $this->boxaddrbase($e->x());
 		$ybase = $this->boxaddrbase($e->y());
 
-		$this->log->info('Pruning box '. $e->to_s() .
-		    ' on (' . $e->x() . ',' . $e->y() . ")\n");
+		$this->log->info('Pruning ' . $e->to_s() . ' in box for (' .
+		    $e->x() . ',' . $e->y() . ")\n");
 
 		for ($i = 0; $i < $this->base; $i++)
 			for ($j = 0; $j < $this->base; $j++) {
