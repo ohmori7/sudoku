@@ -22,7 +22,7 @@ class Log {
 	{
 		if ($this->level < $level)
 			return;
-		fprintf(STDERR, $msg);
+		fprintf(STDOUT, $msg);
 	}
 
 	public function
