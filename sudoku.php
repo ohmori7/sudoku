@@ -242,6 +242,7 @@ class Matrix {
 	{
 		$e = $this->get($x, $y);
 		$e->set($v);
+		$this->dump();
 	}
 
 	private function
@@ -254,6 +255,7 @@ class Matrix {
 			// XXX: should look into another element when
 			//	its value is set?
 		}
+		$this->dump();
 	}
 
 	private function
