@@ -17,12 +17,17 @@ class Log {
 		$this->level = $level;
 	}
 
+	public function
+	is_logging($level)
+	{
+		return $this->level >= $level;
+	}
+
 	private function
 	log($level, $msg)
 	{
-		if ($this->level < $level)
-			return;
-		fprintf(STDOUT, $msg);
+		if ($this->is_logging($level))
+			fprintf(STDOUT, $msg);
 	}
 
 	public function
