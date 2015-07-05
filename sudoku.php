@@ -73,22 +73,35 @@ class Element {
 	public function
 	get()
 	{
-		if (is_int($this->value))
-			return $this->value;
-		$r = array();
-		foreach ($this->value as $v)
-			if ($v !== NULL)
-				$r[] = $v;
-		return $r;
+		return $this->value;
 	}
 
 	public function
 	get_array()
 	{
 		$v = $this->get();
+		if (is_array($v))
+			return $v;
+		$a = array();
+		for ($i = 0; $i < $this->max; $i++)
+			if ($i === $v)
+				$a[] = $v;
+			else
+				$a[] = NULL;
+		return $a;
+	}
+
+	public function
+	get_array_without_null()
+	{
+		$v = $this->get();
 		if (! is_array($v))
-			$v = array($v);
-		return $v;
+			return array($v);
+		$a = array();
+		foreach ($v as $n)
+			if ($n !== NULL)
+				$a[] = $n;
+		return $a;
 	}
 
 	public function
@@ -214,13 +227,6 @@ class Matrix {
 	}
 
 	private function
-	gets($x, $y)
-	{
-		$e = $this->get($x, $y);
-		return $e->to_s();
-	}
-
-	private function
 	get_modified()
 	{
 		$r = array();
@@ -267,8 +273,8 @@ class Matrix {
 	compare_elements($a, $b)
 	{
 
-		$av = $a->get_array();
-		$bv = $b->get_array();
+		$av = $a->get_array_without_null();
+		$bv = $b->get_array_without_null();
 		$d = count($av) - count($bv);
 		if ($d !== 0)
 			return $d;
@@ -320,27 +326,43 @@ class Matrix {
 	public function
 	dump()
 	{
-		$bar = ' ';
+		$bar = '';
 		for ($i = 0; $i < $this->width; $i++) {
+			$bar .= '+';
 			if ($i % $this->base === 0)
 				$bar .= '+';
-			$bar .= '---';
+			for ($j = 0; $j < $this->base; $j++)
+				$bar .= '-';
 		}
-		$bar .= "+\n";
+		$bar .= "++\n";
+		$twobar = str_replace('-', '=', $bar);
 
-		for ($i = 0; $i < $this->width; $i++) {
+		for ($i = 0; $i < $this->height; $i++) {
 			if ($i % $this->base === 0)
+				print($twobar);
+			else
 				print($bar);
-			print(' ');
-			for ($j = 0; $j < $this->width; $j++) {
-				if ($j % $this->base === 0)
-					print('|');
-				print(' ' . $this->gets($i, $j) . ' ');
+			for ($n = 0; $n < $this->base; $n++) {
+				for ($j = 0; $j < $this->width; $j++) {
+					if ($j % $this->base === 0)
+						print('||');
+					else
+						print('|');
+					$e = $this->get($i, $j);
+					$v = $e->get_array();
+					for ($l = 0; $l < $this->base; $l++) {
+						$a = $v[$n * $this->base + $l];
+						if ($a !== NULL)
+							printf('%x', $a);
+						else
+							print(' ');
+					}
+				}
+				print('||');
+				print("\n");
 			}
-			print('|');
-			print("\n");
 		}
-		print($bar);
+		print($twobar);
 	}
 };
 
