@@ -6,9 +6,10 @@ class Element {
 	private $max;
 	private $value;
 	private $modified;
+	private $log;
 
 	function
-	__construct($x, $y, $base)
+	__construct($x, $y, $base, $log)
 	{
 		$this->x = $x;
 		$this->y = $y;
@@ -18,6 +19,7 @@ class Element {
 		for ($i = 0; $i < $this->max; $i++)
 			$this->value[$i] = $i;
 		$this->modified = false;
+		$this->log = $log;
 	}
 
 	public function
@@ -96,6 +98,7 @@ class Element {
 			    $v . ' from candidates ' . $this->to_s());
 		$this->value = $v;
 		$this->modified();
+		$this->log->debug("Set $v on ({$this->x},{$this->y})\n");
 		// XXX: should return left candidates???
 	}
 
@@ -142,6 +145,7 @@ class Element {
 			return;
 		$this->value[$v] = NULL;	// XXX
 		$this->modified();
+		$this->log->debug("Remove $v on ({$this->x},{$this->y})\n");
 
 		$left = NULL;
 		for ($i = 0; $i < $this->max; $i++)
@@ -192,11 +196,11 @@ class Matrix {
 		$this->max = $this->width = $this->height = $max;
 		$this->matrix = array();
 	
+		$this->log = new Log(Log::DEBUG);
 		for ($i = 0; $i < $this->height; $i++)
 			for ($j = 0; $j < $this->width; $j++)
-				$this->matrix[] = new Element($i, $j, $base);
-
-		$this->log = new Log(Log::DEBUG);
+				$this->matrix[] =
+				    new Element($i, $j, $base, $this->log);
 
 		$this->import($a);
 
@@ -221,7 +225,6 @@ class Matrix {
 	{
 		$e = $this->get($x, $y);
 		$e->set($v);
-		$this->log->debug("Set $v on ($x,$y)\n");
 	}
 
 	private function
@@ -231,8 +234,6 @@ class Matrix {
 			$vs = array($vs);
 		foreach ($vs as $v) {
 			$e->remove($v);
-			$this->log->debug("Remove $v on (" .
-			    $e->x() . ',' . $e->y() . ")\n");
 			// XXX: should look into another element when
 			//	its value is set?
 		}
@@ -473,6 +474,8 @@ class Matrix {
 						$a = $v[$n * $this->base + $l];
 						if ($a !== NULL)
 							printf('%x', $a);
+						else if ($e->is_set())
+							print('*');
 						else
 							print(' ');
 					}
