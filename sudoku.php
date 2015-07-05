@@ -266,8 +266,10 @@ class Matrix {
 	{
 		$r = array();
 		foreach ($this->matrix as $e)
-			if ($e->is_modified())
+			if ($e->is_modified()) {
+				$e->unmodified();
 				$r[] = $e;
+			}
 		return $r;
 	}
 
@@ -435,10 +437,8 @@ class Matrix {
 			$r = $this->get_modified();
 			if (empty($r))
 				break;
-			foreach ($r as $e) {
-				$e->unmodified();
+			foreach ($r as $e)
 				$this->prune($e);
-			}
 			$this->naked();
 		}
 	}
