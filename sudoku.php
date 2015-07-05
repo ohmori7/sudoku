@@ -248,6 +248,8 @@ class Matrix {
 		if (! $e->is_set())
 			return;
 
+		$this->log->debug('Pruning ' . $e->get() .
+		    ' on (' . $e->x() . ',' . $e->y() .")\n");
 		$x = $e->x();
 		$y = $e->y();
 		$v = $e->get();
