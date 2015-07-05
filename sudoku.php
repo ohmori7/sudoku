@@ -34,6 +34,20 @@ class Element {
 		return $this->y;
 	}
 
+	public function
+	is_same_row($other)
+	{
+
+		return $this->x === $other->x();
+	}
+
+	public function
+	is_same_column($other)
+	{
+
+		return $this->y === $other->y();
+	}
+
 	private function
 	boxindex($xory)
 	{
@@ -141,7 +155,7 @@ class Element {
 	{
 		if ($this->is_set())
 			return;
-		if (! array_key_exists($v, $this->value))
+		if ($this->value[$v] === NULL)
 			return;
 		$this->value[$v] = NULL;	// XXX
 		$this->modified();
@@ -362,10 +376,6 @@ class Matrix {
 		for ($i = 0; $i < count($av); $i++)
 			if ($av[$i] !== $bv[$i])
 				return $av[$i] - $bv[$i];
-		if ($a->x() !== $b->x())
-			return $a->x() - $b->x();
-		if ($a->y() !== $b->y())
-			return $a->x() - $b->y();
 		return 0;
 	}
 
@@ -375,35 +385,31 @@ class Matrix {
 		if (count($samelist) < 2)
 			return;
 		$e = $samelist[0];
-		$v = $e->get_array_without_null();
-		/*
-		 * This may not be possible.
-		 *
-		if (count($samelist) > count($v))
-			throw new InvalidArgumentException();
-		*/
-		if (count($samelist) < count($v))
+		$n = count($e->get_array_without_null());
+		if (count($samelist) < $n)
 			return;
-		$is_same_x = true;
-		$is_same_y = true;
-		$is_same_box = true;
-		foreach ($samelist as $other) {
-			if ($e->x() !== $other->x())
-				$is_same_x = false;
-			if ($e->y() !== $other->y())
-				$is_same_y = false;
-			if (! $e->is_same_box($other))
-				$is_same_box = false;
-		}
-		$this->log->debug('Naked pruning ' . $e->to_s() .
-		    ' on (' . $e->x() . ',' . $e->y() .")\n");
 
-		if ($is_same_x)
-			$this->prune_row($samelist);
-		if ($is_same_y)
-			$this->prune_column($samelist);
-		if ($is_same_box)
-			$this->prune_box($samelist);
+		while (($e = array_shift($samelist)) != NULL) {
+			$same_row = array($e);
+			$same_col = array($e);
+			$same_box = array($e);
+			foreach ($samelist as $other) {
+				if ($e === $other)
+					continue;
+				if ($e->is_same_row($other))
+					$same_row[] = $other;
+				if ($e->is_same_column($other))
+					$same_col[] = $other;
+				if ($e->is_same_box($other))
+					$same_box[] = $other;
+			}
+			if (count($same_row) === $n)
+				$this->prune_row($same_row);
+			if (count($same_col) === $n)
+				$this->prune_column($same_col);
+			if (count($same_box) === $n)
+				$this->prune_box($same_box);
+		}
 	}
 
 	// naked pair/triple
