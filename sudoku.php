@@ -59,7 +59,7 @@ class Element {
 		return $this->modified;
 	}
 
-	public function
+	private function
 	modified()
 	{
 		$this->modified = true;
