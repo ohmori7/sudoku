@@ -18,7 +18,7 @@ class Element {
 		$this->value = array();
 		for ($i = 0; $i < $this->max; $i++)
 			$this->value[$i] = $i;
-		$this->modified = false;
+		$this->unmodified();
 		$this->log = $log;
 	}
 
