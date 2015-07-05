@@ -242,6 +242,7 @@ class Matrix {
 	private function
 	import($a)
 	{
+		$this->log->debug("== Staring to import\n");
 		if (! is_array($a))
 			throw new UnexpectedValueException();
 		for ($i = 0; $i < $this->height; $i++)
@@ -249,9 +250,10 @@ class Matrix {
 				$v = $a[$i][$j];
 				if ($v === NULL)
 					continue;
-				$this->log->debug("Import $v on ($i,$j)\n");
 				$this->set($i, $j, $v);
 			}
+		$this->log->debug("== Finish importing\n");
+		$this->stat();
 	}
 
 	private function
@@ -437,10 +439,35 @@ class Matrix {
 			$r = $this->get_modified();
 			if (empty($r))
 				break;
+			$this->log->debug("== Start to prune\n");
 			foreach ($r as $e)
 				$this->prune($e);
+			$this->log->debug("== Finish pruning\n");
+			$this->stat();
+			$this->log->debug("== Start naked pruning\n");
 			$this->naked();
+			$this->log->debug("== Finished naked pruning\n");
+			$this->stat();
 		}
+	}
+
+	private function
+	stat()
+	{
+		$n = count($this->matrix);
+		$ncands = $n * $this->max;
+		$nsets = 0;
+		$nleftcands = 0;
+		foreach ($this->matrix as $e) {
+			if ($e->is_set())
+				++$nsets;
+			else  {
+				$v = $e->get_array_without_null();
+				$nleftcands += count($v) - 1;
+			}
+		}
+		$this->log->debug("All elements: $n, Set: {$nsets}, " .
+		    "All candidates: $ncands, Left candidates: $nleftcands\n");
 	}
 
 	public function
