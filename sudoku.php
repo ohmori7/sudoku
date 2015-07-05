@@ -174,7 +174,7 @@ class Matrix {
 			throw new RangeException();
 	}
 
-	public function
+	private function
 	set($x, $y, $v)
 	{
 		$e = $this->get($x, $y);
