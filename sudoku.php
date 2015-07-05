@@ -73,13 +73,12 @@ class Element {
 	public function
 	get()
 	{
-		$r = array();
 		if (is_int($this->value))
-			$r[] = $this->value;
-		else
-			foreach ($this->value as $v)
-				if ($v !== NULL)
-					$r[] = $v;
+			return $this->value;
+		$r = array();
+		foreach ($this->value as $v)
+			if ($v !== NULL)
+				$r[] = $v;
 		return $r;
 	}
 
@@ -161,11 +160,20 @@ class Matrix {
 	}
 
 	private function
+	get_value_array($e)
+	{
+		$v = $e->get();
+		if (! is_array($v))
+			$v = array($v);
+		return $v;
+	}
+
+	private function
 	compare_elements($a, $b)
 	{
 
-		$av = $a->get();
-		$bv = $b->get();
+		$av = $this->get_value_array($a);
+		$bv = $this->get_value_array($b);
 		$d = count($av) - count($bv);
 		if ($d !== 0)
 			return $d;
@@ -259,8 +267,7 @@ class Matrix {
 
 		$x = $e->x();
 		$y = $e->y();
-		$vs = $e->get();
-		$v = $vs[0];
+		$v = $e->get();
 
 		for ($i = 0; $i < $this->height; $i++)
 			if ($i !== $x)
