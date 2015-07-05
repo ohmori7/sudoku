@@ -542,8 +542,8 @@ class Matrix {
 			if (empty($r))
 				break;
 			$this->prune_by_sets($r);
-			$this->log->info("== Start naked pruning\n");
 			$this->prune_by_candidates($r);
+			$this->log->info("== Start naked pruning\n");
 			$this->naked();
 			$this->log->info("== Finished naked pruning\n");
 			$this->stat();
