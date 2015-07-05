@@ -110,7 +110,7 @@ class Matrix {
 		for ($i = 0; $i < $this->height; $i++) {
 			$this->matrix[$i] = array();
 			for ($j = 0; $j < $this->width; $j++) {
-				$e = new Element($i, $j, $this->max);
+				$e = new Element($this->max);
 				$this->matrix[$i][$j] = $e;
 				$this->elementlist[] = $e;
 			}
