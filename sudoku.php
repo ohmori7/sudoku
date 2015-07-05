@@ -83,6 +83,15 @@ class Element {
 	}
 
 	public function
+	get_array()
+	{
+		$v = $this->get();
+		if (! is_array($v))
+			$v = array($v);
+		return $v;
+	}
+
+	public function
 	remove($v)
 	{
 		if ($this->is_set())
@@ -122,7 +131,6 @@ class Matrix {
 	private $matrix;
 	private $base;
 	private $max, $width, $height;
-	private $elementlist;
 	private $log;
 
 	function
@@ -142,15 +150,9 @@ class Matrix {
 		$this->max = $this->width = $this->height = $max;
 		$this->matrix = array();
 	
-		$this->elementlist = array();
-		for ($i = 0; $i < $this->height; $i++) {
-			$this->matrix[$i] = array();
-			for ($j = 0; $j < $this->width; $j++) {
-				$e = new Element($i, $j, $this->max);
-				$this->matrix[$i][$j] = $e;
-				$this->elementlist[] = $e;
-			}
-		}
+		for ($i = 0; $i < $this->height; $i++)
+			for ($j = 0; $j < $this->width; $j++)
+				$this->matrix[] = new Element($i, $j, $max);
 
 		$this->log = new Log(Log::DEBUG);
 
@@ -160,33 +162,9 @@ class Matrix {
 	}
 
 	private function
-	get_value_array($e)
+	addr2index($x, $y)
 	{
-		$v = $e->get();
-		if (! is_array($v))
-			$v = array($v);
-		return $v;
-	}
-
-	private function
-	compare_elements($a, $b)
-	{
-
-		$av = $this->get_value_array($a);
-		$bv = $this->get_value_array($b);
-		$d = count($av) - count($bv);
-		if ($d !== 0)
-			return $d;
-		for ($i = 0; $i < count($av); $i++)
-			if ($av[$i] !== $bv[$i])
-				return $av[$i] - $bv[$i];
-		return 0;
-	}
-
-	private function
-	sort_elements()
-	{
-		usort($this->elementlist, array($this, 'compare_elements'));
+		return $x * $this->width + $y;
 	}
 
 	private function
@@ -232,7 +210,7 @@ class Matrix {
 	get($x, $y)
 	{
 		$this->range_check($x, $y);
-		return $this->matrix[$x][$y];
+		return $this->matrix[$this->addr2index($x, $y)];
 	}
 
 	private function
@@ -246,10 +224,9 @@ class Matrix {
 	get_modified()
 	{
 		$r = array();
-		for ($i = 0; $i < $this->height; $i++)
-			foreach ($this->matrix[$i] as $e)
-				if ($e->is_modified())
-					$r[] = $e;
+		foreach ($this->matrix as $e)
+			if ($e->is_modified())
+				$r[] = $e;
 		return $r;
 	}
 
@@ -286,16 +263,35 @@ class Matrix {
 			}
 	}
 
+	private function
+	compare_elements($a, $b)
+	{
+
+		$av = $a->get_array();
+		$bv = $b->get_array();
+		$d = count($av) - count($bv);
+		if ($d !== 0)
+			return $d;
+		for ($i = 0; $i < count($av); $i++)
+			if ($av[$i] !== $bv[$i])
+				return $av[$i] - $bv[$i];
+		return 0;
+	}
+
 	// naked pair/triple
 	// XXX: it is too easy... and under construction...
 	private function
 	naked()
 	{
-		$this->sort_elements();
+		$a = array();
+		foreach ($this->matrix as $e)
+			if (! $e->is_set())
+				$a[] = $e;
+
+		usort($a, array($this, 'compare_elements'));
+
 		$pe = NULL;
-		foreach ($this->elementlist as $e) {
-			if ($e->is_set())
-				continue;
+		foreach ($a as $e) {
 			if ($pe === NULL || $this->compare_elements($e, $pe)) {
 				$same = array();
 				$pe = $e;
@@ -316,8 +312,8 @@ class Matrix {
 			foreach ($r as $e) {
 				$e->unmodified();
 				$this->prune($e);
-				$this->naked();
 			}
+			$this->naked();
 		}
 	}
 
