@@ -1,4 +1,6 @@
 <?php
+require_once('log.php');
+
 class Element {
 	private $max;
 	private $value;
@@ -114,13 +116,8 @@ class Matrix {
 			}
 		}
 
-		$format = '%timestamp% [%priorityName%]: %message%' . PHP_EOL;
-		$formatter = new Zend_Log_Formatter_Simple($format);
-		$writer = new Zend_Log_Writer_Stream('php://stderr');
-		$writer->setFormatter($formatter);
-		$writer->addFilter(Zend_Log::INFO);
-		$this->log = new Zend_Log();
-		$this->log->addWriter($writer);
+		$this->log = new Log();
+
 		$this->import($a);
 
 		// naked pair/triple...
