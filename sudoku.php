@@ -2,16 +2,51 @@
 require_once('log.php');
 
 class Element {
+	private $x, $y;
 	private $max;
 	private $value;
+	private $modified;
 
 	function
-	__construct($max)
+	__construct($x, $y, $max)
 	{
+		$this->x = $x;
+		$this->y = $y;
 		$this->max = $max;
 		$this->value = array();
 		for ($i = 0; $i < $this->max; $i++)
 			$this->value[$i] = $i;
+		$this->modified = false;
+	}
+
+	public function
+	x()
+	{
+		return $this->x;
+	}
+
+	public function
+	y()
+	{
+		return $this->y;
+	}
+
+	public function
+	is_modified()
+	{
+		return $this->modified;
+	}
+
+	public function
+	modified()
+	{
+		$this->modified = true;
+	}
+
+	public function
+	unmodified()
+	{
+		$this->modified = false;
 	}
 
 	public function
@@ -31,6 +66,7 @@ class Element {
 			throw new UnexpectedValueException('Trying to set ' .
 			    $v . ' from candidates ' . $this->to_s());
 		$this->value = $v;
+		$this->modified();
 		// XXX: should return left candidates???
 	}
 
@@ -55,6 +91,7 @@ class Element {
 		if (! array_key_exists($v, $this->value))
 			return;
 		$this->value[$v] = NULL;	// XXX
+		$this->modified();
 
 		$left = NULL;
 		for ($i = 0; $i < $this->max; $i++)
@@ -110,7 +147,7 @@ class Matrix {
 		for ($i = 0; $i < $this->height; $i++) {
 			$this->matrix[$i] = array();
 			for ($j = 0; $j < $this->width; $j++) {
-				$e = new Element($this->max);
+				$e = new Element($i, $j, $this->max);
 				$this->matrix[$i][$j] = $e;
 				$this->elementlist[] = $e;
 			}
@@ -120,21 +157,7 @@ class Matrix {
 
 		$this->import($a);
 
-		// naked pair/triple...
-		// XXX: it is too easy... and under construction...
-		$this->sort_elements();
-		$pe = NULL;
-		foreach ($this->elementlist as $e) {
-			if ($e->is_set())
-				continue;
-			if ($pe === NULL || $this->compare_elements($e, $pe)) {
-				$same = array();
-				$pe = $e;
-				continue;
-			}
-			$this->log->debug('same element found: ' .
-			    $e->to_s() . "\n");
-		}
+		$this->solve();
 	}
 
 	private function
@@ -171,22 +194,6 @@ class Matrix {
 		$e = $this->get($x, $y);
 		$e->set($v);
 		$this->log->debug("Set $v on ($x,$y)\n");
-
-		for ($i = 0; $i < $this->height; $i++)
-			if ($i !== $x)
-				$this->remove($i, $y, $v);
-		for ($j = 0; $j < $this->width; $j++)
-			if ($i !== $y)
-				$this->remove($x, $j, $v);
-
-		$xbase = ((int)($x / $this->base)) * $this->base;
-		$ybase = ((int)($y / $this->base)) * $this->base;
-		for ($i = 0; $i < $this->base; $i++)
-			for ($j = 0; $j < $this->base; $j++) {
-				if ($i === $x && $j === $y)
-					continue;
-				$this->remove($xbase + $i, $ybase + $j, $v);
-			}
 	}
 
 	private function
@@ -225,6 +232,78 @@ class Matrix {
 	{
 		$e = $this->get($x, $y);
 		return $e->to_s();
+	}
+
+	private function
+	get_modified()
+	{
+		$r = array();
+		for ($i = 0; $i < $this->height; $i++)
+			foreach ($this->matrix[$i] as $e)
+				if ($e->is_modified())
+					$r[] = $e;
+		return $r;
+	}
+
+	private function
+	boxaddrbase($a)
+	{
+		return ((int)($a / $this->base)) * $this->base;
+	}
+
+	private function
+	prune($e)
+	{
+		if (! $e->is_set())
+			return;
+
+		$x = $e->x();
+		$y = $e->y();
+		$vs = $e->get();
+		$v = $vs[0];
+
+		for ($i = 0; $i < $this->height; $i++)
+			if ($i !== $x)
+				$this->remove($i, $y, $v);
+		for ($j = 0; $j < $this->width; $j++)
+			if ($i !== $y)
+				$this->remove($x, $j, $v);
+
+		$xbase = $this->boxaddrbase($x);
+		$ybase = $this->boxaddrbase($y);
+		for ($i = 0; $i < $this->base; $i++)
+			for ($j = 0; $j < $this->base; $j++) {
+				if ($i === $x && $j === $y)
+					continue;
+				$this->remove($xbase + $i, $ybase + $j, $v);
+			}
+	}
+
+	private function
+	solve()
+	{
+
+		$r = $this->get_modified();
+		foreach ($r as $e) {
+			$e->unmodified();
+			$this->prune($e);
+		}
+
+		// naked pair/triple...
+		// XXX: it is too easy... and under construction...
+		$this->sort_elements();
+		$pe = NULL;
+		foreach ($this->elementlist as $e) {
+			if ($e->is_set())
+				continue;
+			if ($pe === NULL || $this->compare_elements($e, $pe)) {
+				$same = array();
+				$pe = $e;
+				continue;
+			}
+			$this->log->debug('same element found: ' .
+			    $e->to_s() . "\n");
+		}
 	}
 
 	public function
