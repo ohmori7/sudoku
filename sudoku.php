@@ -365,7 +365,7 @@ class Matrix {
 			if (! $e->is_set())
 				continue;
 			$this->log->info('Pruning ' . $e->get() .
-			    ' on (' . $e->x() . ',' . $e->y() .")\n");
+			    ' for (' . $e->x() . ',' . $e->y() .")\n");
 			$this->prune_row($e);
 			$this->prune_column($e);
 			$this->prune_box($e);
