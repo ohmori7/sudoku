@@ -351,7 +351,7 @@ class Matrix {
 	}
 
 	private function
-	prune_by_set($r)
+	prune_by_sets($r)
 	{
 		$this->log->debug("== Start to prune by set elements\n");
 		foreach ($r as $e) {
@@ -448,7 +448,7 @@ class Matrix {
 			$r = $this->get_modified();
 			if (empty($r))
 				break;
-			$this->prune_by_set($r);
+			$this->prune_by_sets($r);
 			$this->log->debug("== Start naked pruning\n");
 			$this->naked();
 			$this->log->debug("== Finished naked pruning\n");
