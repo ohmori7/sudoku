@@ -286,18 +286,11 @@ class Matrix {
 			}
 	}
 
+	// naked pair/triple
+	// XXX: it is too easy... and under construction...
 	private function
-	solve()
+	naked()
 	{
-
-		$r = $this->get_modified();
-		foreach ($r as $e) {
-			$e->unmodified();
-			$this->prune($e);
-		}
-
-		// naked pair/triple...
-		// XXX: it is too easy... and under construction...
 		$this->sort_elements();
 		$pe = NULL;
 		foreach ($this->elementlist as $e) {
@@ -310,6 +303,21 @@ class Matrix {
 			}
 			$this->log->debug('same element found: ' .
 			    $e->to_s() . "\n");
+		}
+	}
+
+	private function
+	solve()
+	{
+		for (;;) {
+			$r = $this->get_modified();
+			if (empty($r))
+				break;
+			foreach ($r as $e) {
+				$e->unmodified();
+				$this->prune($e);
+				$this->naked();
+			}
 		}
 	}
 
