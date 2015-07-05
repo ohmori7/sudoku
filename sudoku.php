@@ -1,6 +1,13 @@
 <?php
 require_once('log.php');
 
+// similar to array_filter() but changes each key as well.
+function
+sudoku_array_filter($a)
+{
+	return array_values(array_filter($a));
+}
+
 class Element {
 	private $x, $y;
 	private $max;
@@ -143,11 +150,7 @@ class Element {
 		$v = $this->get();
 		if (! is_array($v))
 			return array($v);
-		$a = array();
-		foreach ($v as $n)
-			if ($n !== NULL)
-				$a[] = $n;
-		return $a;
+		return sudoku_array_filter($v);
 	}
 
 	public function
@@ -368,6 +371,90 @@ class Matrix {
 	}
 
 	private function
+	foreach_row_or_column($x_or_y, $cb, &$arg, $exclude, $isrow)
+	{
+		if (! is_array($exclude))
+			$exclude = array($exclude);
+
+		for ($i = 0; $i < $this->max; $i++) {
+			if ($isrow)
+				$e = $this->get($x_or_y, $i);
+			else
+				$e = $this->get($i, $x_or_y);
+			if ($e->is_included($exclude))
+				continue;
+			$this->$cb($e, $arg);
+		}
+	}
+
+	private function
+	foreach_row($x, $cb, &$arg, $exclude = array())
+	{
+		$this->foreach_row_or_column($x, $cb, $arg, $exclude, true);
+	}
+
+	private function
+	foreach_column($y, $cb, &$arg, $exclude = array())
+	{
+		$this->foreach_row_or_column($y, $cb, $arg, $exclude, false);
+	}
+
+	private function
+	foreach_box($coord, $cb, &$arg, $exclude = array())
+	{
+		if (! is_array($exclude))
+			$exclude = array($exclude);
+
+		$xbase = $this->boxaddrbase($coord[0]);
+		$ybase = $this->boxaddrbase($coord[1]);
+		for ($i = 0; $i < $this->base; $i++)
+			for ($j = 0; $j < $this->base; $j++) {
+				$x = $xbase + $i;
+				$y = $ybase + $j;
+				$e = $this->get($x, $y);
+				if ($e->is_included($exclude))
+					continue;
+				$this->$cb($e, $arg);
+			}
+	}
+
+	private function
+	prune_candidates($e, $arg)
+	{
+		foreach ($e->get_array_without_null() as $otherv)
+			if ($otherv !== NULL)
+				$arg[$otherv] = NULL;
+	}
+
+	private function
+	prune_by_candidates($modified)
+	{
+		$this->log->debug("== Start to prune by candidates\n");
+		foreach ($modified as $e) {
+			if ($e->is_set())
+				continue;
+			foreach (array('row', 'column', 'box') as $unit) {
+				$v = $e->get();
+				if ($unit === 'row')
+					$addr = $e->x();
+				else if ($unit === 'column')
+					$addr = $e->y();
+				else
+					$addr = array($e->x(), $e->y());
+				$cb = "foreach_$unit";
+				$this->$cb($addr, 'prune_candidates', $v, $e);
+				$v = sudoku_array_filter($v);
+				if (count($v) === 1) {
+					$e->set($v[0]);
+					break;
+				}
+			}
+		}
+		$this->log->debug("== Finish pruning by candidates\n");
+		$this->stat();
+	}
+
+	private function
 	compare_elements($a, $b)
 	{
 
@@ -450,6 +537,7 @@ class Matrix {
 				break;
 			$this->prune_by_sets($r);
 			$this->log->debug("== Start naked pruning\n");
+			$this->prune_by_candidates($r);
 			$this->naked();
 			$this->log->debug("== Finished naked pruning\n");
 			$this->stat();
