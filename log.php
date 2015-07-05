@@ -10,7 +10,6 @@ class Log {
 	const DEBUG	= 7;
 
 	private $level;
-	private $logger;
 
 	function
 	__construct($level = self::INFO)
