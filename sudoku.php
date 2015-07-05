@@ -116,7 +116,7 @@ class Matrix {
 			}
 		}
 
-		$this->log = new Log();
+		$this->log = new Log(Log::DEBUG);
 
 		$this->import($a);
 

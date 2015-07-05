@@ -13,9 +13,9 @@ class Log {
 	private $logger;
 
 	function
-	__construct()
+	__construct($level = self::INFO)
 	{
-		$this->level = self::DEBUG;
+		$this->level = $level;
 	}
 
 	private function
