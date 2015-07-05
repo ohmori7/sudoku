@@ -246,12 +246,12 @@ class Matrix {
 		$y = $e->y();
 		$v = $e->get();
 
-		for ($i = 0; $i < $this->height; $i++)
+		for ($i = 0; $i < $this->max; $i++) {
 			if ($i !== $x)
 				$this->remove($i, $y, $v);
-		for ($j = 0; $j < $this->width; $j++)
 			if ($i !== $y)
-				$this->remove($x, $j, $v);
+				$this->remove($x, $i, $v);
+		}
 
 		$xbase = $this->boxaddrbase($x);
 		$ybase = $this->boxaddrbase($y);
