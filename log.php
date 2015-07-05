@@ -9,25 +9,21 @@ class Log {
 	const INFO	= 6;
 	const DEBUG	= 7;
 
+	private $level;
 	private $logger;
 
 	function
 	__construct()
 	{
-		$format = '%timestamp% [%priorityName%]: %message%' . PHP_EOL;
-		$formatter = new Zend_Log_Formatter_Simple($format);
-		$writer = new Zend_Log_Writer_Stream('php://stderr');
-		$writer->setFormatter($formatter);
-		$writer->addFilter(Zend_Log::INFO);
-		$this->logger = new Zend_Log();
-		$this->logger->addWriter($writer);
+		$this->level = self::DEBUG;
 	}
 
 	private function
 	log($level, $msg)
 	{
-
-		$this->logger($msg, $level);
+		if ($this->level < $level)
+			return;
+		fprintf(STDERR, $msg);
 	}
 
 	public function
