@@ -351,17 +351,20 @@ class Matrix {
 	}
 
 	private function
-	prune($e)
+	prune_by_set($r)
 	{
-		if (! $e->is_set())
-			return;
-
-		$this->log->debug('Pruning ' . $e->get() .
-		    ' on (' . $e->x() . ',' . $e->y() .")\n");
-
-		$this->prune_row($e);
-		$this->prune_column($e);
-		$this->prune_box($e);
+		$this->log->debug("== Start to prune by set elements\n");
+		foreach ($r as $e) {
+			if (! $e->is_set())
+				continue;
+			$this->log->debug('Pruning ' . $e->get() .
+			    ' on (' . $e->x() . ',' . $e->y() .")\n");
+			$this->prune_row($e);
+			$this->prune_column($e);
+			$this->prune_box($e);
+		}
+		$this->log->debug("== Finish pruning by set elements\n");
+		$this->stat();
 	}
 
 	private function
@@ -445,11 +448,7 @@ class Matrix {
 			$r = $this->get_modified();
 			if (empty($r))
 				break;
-			$this->log->debug("== Start to prune\n");
-			foreach ($r as $e)
-				$this->prune($e);
-			$this->log->debug("== Finish pruning\n");
-			$this->stat();
+			$this->prune_by_set($r);
 			$this->log->debug("== Start naked pruning\n");
 			$this->naked();
 			$this->log->debug("== Finished naked pruning\n");
