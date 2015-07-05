@@ -119,7 +119,7 @@ class Element {
 			    $v . ' from candidates ' . $this->to_s());
 		$this->value = $v;
 		$this->modified();
-		$this->log->debug("Set $v on ({$this->x},{$this->y})\n");
+		$this->log->info("Set $v on ({$this->x},{$this->y})\n");
 		// XXX: should return left candidates???
 	}
 
@@ -162,7 +162,7 @@ class Element {
 			return;
 		$this->value[$v] = NULL;	// XXX
 		$this->modified();
-		$this->log->debug("Remove $v on ({$this->x},{$this->y})\n");
+		$this->log->info("Remove $v on ({$this->x},{$this->y})\n");
 
 		$left = NULL;
 		for ($i = 0; $i < $this->max; $i++)
@@ -242,7 +242,8 @@ class Matrix {
 	{
 		$e = $this->get($x, $y);
 		$e->set($v);
-		$this->dump();
+		if ($this->log->is_logging(Log::DEBUG))
+			$this->dump();
 	}
 
 	private function
@@ -255,13 +256,14 @@ class Matrix {
 			// XXX: should look into another element when
 			//	its value is set?
 		}
-		$this->dump();
+		if ($this->log->is_logging(Log::DEBUG))
+			$this->dump();
 	}
 
 	private function
 	import($a)
 	{
-		$this->log->debug("== Staring to import\n");
+		$this->log->info("== Staring to import\n");
 		if (! is_array($a))
 			throw new UnexpectedValueException();
 		for ($i = 0; $i < $this->height; $i++)
@@ -271,7 +273,7 @@ class Matrix {
 					continue;
 				$this->set($i, $j, $v);
 			}
-		$this->log->debug("== Finish importing\n");
+		$this->log->info("== Finish importing\n");
 		$this->stat();
 	}
 
@@ -302,7 +304,7 @@ class Matrix {
 		$e = $samelist[0];
 		$xory = $is_row ? $e->x() : $e->y();
 		$v = $e->get_array_without_null();
-		$this->log->debug('Pruning ' . ($is_row ? 'row' : 'column') .
+		$this->log->info('Pruning ' . ($is_row ? 'row' : 'column') .
 		    ' ' . $e->to_s() .
 		    ' on (' . $e->x() . ',' . $e->y() . ")\n");
 		for ($i = 0; $i < $this->width; $i++) {
@@ -344,7 +346,7 @@ class Matrix {
 		$xbase = $this->boxaddrbase($e->x());
 		$ybase = $this->boxaddrbase($e->y());
 
-		$this->log->debug('Pruning box '. $e->to_s() .
+		$this->log->info('Pruning box '. $e->to_s() .
 		    ' on (' . $e->x() . ',' . $e->y() . ")\n");
 
 		for ($i = 0; $i < $this->base; $i++)
@@ -358,17 +360,17 @@ class Matrix {
 	private function
 	prune_by_sets($r)
 	{
-		$this->log->debug("== Start to prune by set elements\n");
+		$this->log->info("== Start to prune by set elements\n");
 		foreach ($r as $e) {
 			if (! $e->is_set())
 				continue;
-			$this->log->debug('Pruning ' . $e->get() .
+			$this->log->info('Pruning ' . $e->get() .
 			    ' on (' . $e->x() . ',' . $e->y() .")\n");
 			$this->prune_row($e);
 			$this->prune_column($e);
 			$this->prune_box($e);
 		}
-		$this->log->debug("== Finish pruning by set elements\n");
+		$this->log->info("== Finish pruning by set elements\n");
 		$this->stat();
 	}
 
@@ -431,7 +433,7 @@ class Matrix {
 	private function
 	prune_by_candidates($modified)
 	{
-		$this->log->debug("== Start to prune by candidates\n");
+		$this->log->info("== Start to prune by candidates\n");
 		foreach ($modified as $e) {
 			if ($e->is_set())
 				continue;
@@ -452,7 +454,7 @@ class Matrix {
 				}
 			}
 		}
-		$this->log->debug("== Finish pruning by candidates\n");
+		$this->log->info("== Finish pruning by candidates\n");
 		$this->stat();
 	}
 
@@ -538,10 +540,10 @@ class Matrix {
 			if (empty($r))
 				break;
 			$this->prune_by_sets($r);
-			$this->log->debug("== Start naked pruning\n");
+			$this->log->info("== Start naked pruning\n");
 			$this->prune_by_candidates($r);
 			$this->naked();
-			$this->log->debug("== Finished naked pruning\n");
+			$this->log->info("== Finished naked pruning\n");
 			$this->stat();
 		}
 	}
@@ -561,7 +563,7 @@ class Matrix {
 				$nleftcands += count($v) - 1;
 			}
 		}
-		$this->log->debug("All elements: $n, Set: {$nsets}, " .
+		$this->log->info("All elements: $n, Set: {$nsets}, " .
 		    "All candidates: $ncands, Left candidates: $nleftcands\n");
 	}
 
