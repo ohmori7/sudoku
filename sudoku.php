@@ -8,11 +8,12 @@ class Element {
 	private $modified;
 
 	function
-	__construct($x, $y, $max)
+	__construct($x, $y, $base)
 	{
 		$this->x = $x;
 		$this->y = $y;
-		$this->max = $max;
+		$this->base = $base;
+		$this->max = pow($base, 2);
 		$this->value = array();
 		for ($i = 0; $i < $this->max; $i++)
 			$this->value[$i] = $i;
@@ -29,6 +30,25 @@ class Element {
 	y()
 	{
 		return $this->y;
+	}
+
+	private function
+	boxindex($xory)
+	{
+		return (int)($xory / $this->base);
+	}
+
+	private function
+	boxid()
+	{
+		return $this->boxindex($this->x) * $this->base +
+		    $this->boxindex($this->y);
+	}
+
+	public function
+	is_same_box($other)
+	{
+		return $this->boxid() === $other->boxid();
 	}
 
 	public function
@@ -53,6 +73,15 @@ class Element {
 	is_set()
 	{
 		return ! is_array($this->value);
+	}
+
+	public function
+	is_included($elementlist)
+	{
+		foreach ($elementlist as $e)
+			if ($this->x === $e->x() && $this->y === $e->y())
+				return true;
+		return false;
 	}
 
 	public function
@@ -165,7 +194,7 @@ class Matrix {
 	
 		for ($i = 0; $i < $this->height; $i++)
 			for ($j = 0; $j < $this->width; $j++)
-				$this->matrix[] = new Element($i, $j, $max);
+				$this->matrix[] = new Element($i, $j, $base);
 
 		$this->log = new Log(Log::DEBUG);
 
@@ -196,12 +225,17 @@ class Matrix {
 	}
 
 	private function
-	remove($x, $y, $v)
+	remove($e, $vs)
 	{
-		$e = $this->get($x, $y);
-		$e->remove($v);
-		$this->log->debug("Remove $v on ($x,$y)\n");
-		// XXX: should look into another element when its value is set?
+		if (! is_array($vs))
+			$vs = array($vs);
+		foreach ($vs as $v) {
+			$e->remove($v);
+			$this->log->debug("Remove $v on (" .
+			    $e->x() . ',' . $e->y() . ")\n");
+			// XXX: should look into another element when
+			//	its value is set?
+		}
 	}
 
 	private function
@@ -237,9 +271,64 @@ class Matrix {
 	}
 
 	private function
+	prune_row_or_column($samelist, $is_row = true)
+	{
+		if (! is_array($samelist))
+			$samelist = array($samelist);
+		$e = $samelist[0];
+		$xory = $is_row ? $e->x() : $e->y();
+		$v = $e->get_array_without_null();
+		$this->log->debug('Pruning ' . ($is_row ? 'row' : 'column') .
+		    ' ' . $e->to_s() .
+		    ' on (' . $e->x() . ',' . $e->y() . ")\n");
+		for ($i = 0; $i < $this->width; $i++) {
+			if ($is_row)
+				$other = $this->get($xory, $i);
+			else
+				$other = $this->get($i, $xory);
+			if (! $other->is_included($samelist))
+				$this->remove($other, $v);
+		}
+	}
+
+	private function
+	prune_row($samelist)
+	{
+		$this->prune_row_or_column($samelist, true);
+	}
+
+	private function
+	prune_column($samelist)
+	{
+		$this->prune_row_or_column($samelist, false);
+	}
+
+	private function
 	boxaddrbase($a)
 	{
 		return ((int)($a / $this->base)) * $this->base;
+	}
+
+	private function
+	prune_box($samelist)
+	{
+		if (! is_array($samelist))
+			$samelist = array($samelist);
+
+		$e = $samelist[0];
+		$v = $e->get_array_without_null();
+		$xbase = $this->boxaddrbase($e->x());
+		$ybase = $this->boxaddrbase($e->y());
+
+		$this->log->debug('Pruning box '. $e->to_s() .
+		    ' on (' . $e->x() . ',' . $e->y() . ")\n");
+
+		for ($i = 0; $i < $this->base; $i++)
+			for ($j = 0; $j < $this->base; $j++) {
+				$other = $this->get($xbase + $i, $ybase + $j);
+				if (! $other->is_included($samelist))
+					$this->remove($other, $v);
+			}
 	}
 
 	private function
@@ -250,25 +339,10 @@ class Matrix {
 
 		$this->log->debug('Pruning ' . $e->get() .
 		    ' on (' . $e->x() . ',' . $e->y() .")\n");
-		$x = $e->x();
-		$y = $e->y();
-		$v = $e->get();
 
-		for ($i = 0; $i < $this->max; $i++) {
-			if ($i !== $x)
-				$this->remove($i, $y, $v);
-			if ($i !== $y)
-				$this->remove($x, $i, $v);
-		}
-
-		$xbase = $this->boxaddrbase($x);
-		$ybase = $this->boxaddrbase($y);
-		for ($i = 0; $i < $this->base; $i++)
-			for ($j = 0; $j < $this->base; $j++) {
-				if ($i === $x && $j === $y)
-					continue;
-				$this->remove($xbase + $i, $ybase + $j, $v);
-			}
+		$this->prune_row($e);
+		$this->prune_column($e);
+		$this->prune_box($e);
 	}
 
 	private function
@@ -283,7 +357,48 @@ class Matrix {
 		for ($i = 0; $i < count($av); $i++)
 			if ($av[$i] !== $bv[$i])
 				return $av[$i] - $bv[$i];
+		if ($a->x() !== $b->x())
+			return $a->x() - $b->x();
+		if ($a->y() !== $b->y())
+			return $a->x() - $b->y();
 		return 0;
+	}
+
+	private function
+	naked_prune($samelist)
+	{
+		if (count($samelist) < 2)
+			return;
+		$e = $samelist[0];
+		$v = $e->get_array_without_null();
+		/*
+		 * This may not be possible.
+		 *
+		if (count($samelist) > count($v))
+			throw new InvalidArgumentException();
+		*/
+		if (count($samelist) < count($v))
+			return;
+		$is_same_x = true;
+		$is_same_y = true;
+		$is_same_box = true;
+		foreach ($samelist as $other) {
+			if ($e->x() !== $other->x())
+				$is_same_x = false;
+			if ($e->y() !== $other->y())
+				$is_same_y = false;
+			if (! $e->is_same_box($other))
+				$is_same_box = false;
+		}
+		$this->log->debug('Naked pruning ' . $e->to_s() .
+		    ' on (' . $e->x() . ',' . $e->y() .")\n");
+
+		if ($is_same_x)
+			$this->prune_row($samelist);
+		if ($is_same_y)
+			$this->prune_column($samelist);
+		if ($is_same_box)
+			$this->prune_box($samelist);
 	}
 
 	// naked pair/triple
@@ -299,15 +414,17 @@ class Matrix {
 		usort($a, array($this, 'compare_elements'));
 
 		$pe = NULL;
+		$samelist = array();
 		foreach ($a as $e) {
 			if ($pe === NULL || $this->compare_elements($e, $pe)) {
-				$same = array();
 				$pe = $e;
+				$this->naked_prune($samelist);
+				$samelist = array($e);
 				continue;
 			}
-			$this->log->debug('same element found: ' .
-			    $e->to_s() . "\n");
+			$samelist[] = $e;
 		}
+		$this->naked_prune($samelist);
 	}
 
 	private function
