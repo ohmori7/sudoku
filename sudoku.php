@@ -240,6 +240,12 @@ class Matrix {
 	}
 
 	private function
+	boxaddrbase($a)
+	{
+		return ((int)($a / $this->base)) * $this->base;
+	}
+
+	private function
 	range_check($x, $y)
 	{
 		if ($x > $this->height || $y > $this->width)
@@ -306,84 +312,6 @@ class Matrix {
 	}
 
 	private function
-	prune_row_or_column($samelist, $is_row = true)
-	{
-		if (! is_array($samelist))
-			$samelist = array($samelist);
-		$e = $samelist[0];
-		$xory = $is_row ? $e->x() : $e->y();
-		$v = $e->get_array_without_null();
-		$this->log->info('Pruning ' . $e->to_s() .
-		    ' in ' . ($is_row ? 'row' : 'column') . ' for (' .
-		    $e->x() . ',' . $e->y() . ")\n");
-		for ($i = 0; $i < $this->width; $i++) {
-			if ($is_row)
-				$other = $this->get($xory, $i);
-			else
-				$other = $this->get($i, $xory);
-			if (! $other->is_included($samelist))
-				$this->remove($other, $v);
-		}
-	}
-
-	private function
-	prune_row($samelist)
-	{
-		$this->prune_row_or_column($samelist, true);
-	}
-
-	private function
-	prune_column($samelist)
-	{
-		$this->prune_row_or_column($samelist, false);
-	}
-
-	private function
-	boxaddrbase($a)
-	{
-		return ((int)($a / $this->base)) * $this->base;
-	}
-
-	private function
-	prune_box($samelist)
-	{
-		if (! is_array($samelist))
-			$samelist = array($samelist);
-
-		$e = $samelist[0];
-		$v = $e->get_array_without_null();
-		$xbase = $this->boxaddrbase($e->x());
-		$ybase = $this->boxaddrbase($e->y());
-
-		$this->log->info('Pruning ' . $e->to_s() . ' in box for (' .
-		    $e->x() . ',' . $e->y() . ")\n");
-
-		for ($i = 0; $i < $this->base; $i++)
-			for ($j = 0; $j < $this->base; $j++) {
-				$other = $this->get($xbase + $i, $ybase + $j);
-				if (! $other->is_included($samelist))
-					$this->remove($other, $v);
-			}
-	}
-
-	private function
-	prune_by_sets($r)
-	{
-		$this->log->info("== Start to prune by set elements\n");
-		foreach ($r as $e) {
-			if (! $e->is_set())
-				continue;
-			$this->log->info('Pruning ' . $e->get() .
-			    ' for (' . $e->x() . ',' . $e->y() .")\n");
-			$this->prune_row($e);
-			$this->prune_column($e);
-			$this->prune_box($e);
-		}
-		$this->log->info("== Finish pruning by set elements\n");
-		$this->stat();
-	}
-
-	private function
 	foreach_row_or_column($x_or_y, $cb, &$arg, $exclude, $isrow)
 	{
 		if (! is_array($exclude))
@@ -429,6 +357,78 @@ class Matrix {
 					continue;
 				$this->$cb($e, $arg);
 			}
+	}
+
+	private function
+	prune_row_or_column($samelist, $is_row = true)
+	{
+		if (! is_array($samelist))
+			$samelist = array($samelist);
+		$e = $samelist[0];
+		$xory = $is_row ? $e->x() : $e->y();
+		$v = $e->get_array_without_null();
+		$this->log->info('Pruning ' . $e->to_s() .
+		    ' in ' . ($is_row ? 'row' : 'column') . ' for (' .
+		    $e->x() . ',' . $e->y() . ")\n");
+		for ($i = 0; $i < $this->width; $i++) {
+			if ($is_row)
+				$other = $this->get($xory, $i);
+			else
+				$other = $this->get($i, $xory);
+			if (! $other->is_included($samelist))
+				$this->remove($other, $v);
+		}
+	}
+
+	private function
+	prune_row($samelist)
+	{
+		$this->prune_row_or_column($samelist, true);
+	}
+
+	private function
+	prune_column($samelist)
+	{
+		$this->prune_row_or_column($samelist, false);
+	}
+
+	private function
+	prune_box($samelist)
+	{
+		if (! is_array($samelist))
+			$samelist = array($samelist);
+
+		$e = $samelist[0];
+		$v = $e->get_array_without_null();
+		$xbase = $this->boxaddrbase($e->x());
+		$ybase = $this->boxaddrbase($e->y());
+
+		$this->log->info('Pruning ' . $e->to_s() . ' in box for (' .
+		    $e->x() . ',' . $e->y() . ")\n");
+
+		for ($i = 0; $i < $this->base; $i++)
+			for ($j = 0; $j < $this->base; $j++) {
+				$other = $this->get($xbase + $i, $ybase + $j);
+				if (! $other->is_included($samelist))
+					$this->remove($other, $v);
+			}
+	}
+
+	private function
+	prune_by_sets($r)
+	{
+		$this->log->info("== Start to prune by set elements\n");
+		foreach ($r as $e) {
+			if (! $e->is_set())
+				continue;
+			$this->log->info('Pruning ' . $e->get() .
+			    ' for (' . $e->x() . ',' . $e->y() .")\n");
+			$this->prune_row($e);
+			$this->prune_column($e);
+			$this->prune_box($e);
+		}
+		$this->log->info("== Finish pruning by set elements\n");
+		$this->stat();
 	}
 
 	private function
