@@ -256,9 +256,8 @@ class Matrix {
 	}
 
 	private function
-	set($x, $y, $v)
+	set($e, $v)
 	{
-		$e = $this->get($x, $y);
 		$e->set($v);
 		if ($this->log->is_logging(Log::DEBUG)) {
 			$this->dump();
@@ -293,7 +292,8 @@ class Matrix {
 				$v = $a[$i][$j];
 				if ($v === NULL)
 					continue;
-				$this->set($i, $j, $v);
+				$e = $this->get($i, $j);
+				$this->set($e, $v);
 			}
 		$this->log->info("== Finish importing\n");
 		$this->stat();
@@ -478,7 +478,9 @@ class Matrix {
 				$this->$cb($addr, 'prune_candidates', $v, $e);
 				$v = sudoku_array_filter($v);
 				if (count($v) === 1) {
-					$e->set($v[0]);
+					$this->log->debug($e->a_to_s() .
+					    ": pruned by $unit\n");
+					$this->set($e, $v[0]);
 					break;
 				}
 			}
