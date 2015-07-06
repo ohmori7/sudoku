@@ -259,7 +259,7 @@ class Matrix {
 	set($x, $y, $v)
 	{
 		$e = $this->get($x, $y);
-		$isset = $e->set($v);
+		$e->set($v);
 		if ($this->log->is_logging(Log::DEBUG))
 			$this->dump();
 	}
