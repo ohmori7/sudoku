@@ -188,13 +188,10 @@ class Element {
 	public function
 	to_s()
 	{
-		if (is_int($this->value))
-			return sudoku_ntoa($this->value);
 		$v = $this->value;
-		$a = array();
-		foreach ($v as $n)
-			if ($n !== NULL)
-				$a[] = sudoku_ntoa($n);
+		if (is_int($v))
+			return sudoku_ntoa($v);
+		$a = array_map('sudoku_ntoa', array_filter($v));
 		return '(' . implode($a) . ')';
 	}
 
