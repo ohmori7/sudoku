@@ -260,8 +260,10 @@ class Matrix {
 	{
 		$e = $this->get($x, $y);
 		$e->set($v);
-		if ($this->log->is_logging(Log::DEBUG))
+		if ($this->log->is_logging(Log::DEBUG)) {
 			$this->dump();
+			$this->sanity_check($e);
+		}
 	}
 
 	private function
@@ -271,8 +273,10 @@ class Matrix {
 			$vs = array($vs);
 		foreach ($vs as $v) {
 			$isremoved = $e->remove($v);
-			if ($isremoved && $this->log->is_logging(Log::DEBUG))
+			if ($isremoved && $this->log->is_logging(Log::DEBUG)) {
 				$this->dump();
+				$this->sanity_check($e);
+			}
 			// XXX: should look into another element when
 			//	its value is set?
 		}
@@ -360,6 +364,28 @@ class Matrix {
 					continue;
 				$this->$cb($e, $arg);
 			}
+	}
+
+	private function
+	conflict_check($e, $ee)
+	{
+		if (! $e->is_set())
+			return;
+		if ($e->get() === $ee->get())
+			throw new UnexpectedValueException(
+			    $e->to_s() . ' on ' . $ee->a_to_s() .
+			    ' conflicts with ' . $e->a_to_s());
+	}
+
+	private function
+	sanity_check($e)
+	{
+		if (! $e->is_set())
+			return;
+		$this->foreach_row($e->x(), 'conflict_check', $e, $e);
+		$this->foreach_column($e->y(), 'conflict_check', $e, $e);
+		$this->foreach_box(array($e->x(), $e->y()), 'conflict_check',
+		    $e, $e);
 	}
 
 	private function
