@@ -137,10 +137,8 @@ class Element {
 			return $v;
 		$a = array();
 		for ($i = 0; $i < $this->max; $i++)
-			if ($i === $v)
-				$a[] = $v;
-			else
-				$a[] = NULL;
+			$a[] = NULL;
+		$a[$this->value] = $v;
 		return $a;
 	}
 
