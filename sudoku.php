@@ -8,6 +8,15 @@ sudoku_array_filter($a)
 	return array_values(array_filter($a));
 }
 
+function
+sudoku_ntoa($v)
+{
+	static $x = '0123456789abcdefghijklmnopqrstuvwxyz';
+	if ($v >= strlen($x))
+		throw new RangeException();
+	return $x[$v];
+}
+
 class Element {
 	private $x, $y;
 	private $max;
@@ -180,12 +189,12 @@ class Element {
 	to_s()
 	{
 		if (is_int($this->value))
-			return sprintf('%x', $this->value);
+			return sudoku_ntoa($this->value);
 		$v = $this->value;
 		$a = array();
 		foreach ($v as $n)
 			if ($n !== NULL)
-				$a[] = sprintf('%x', $n);
+				$a[] = sudoku_ntoa($n);
 		return '(' . implode($a) . ')';
 	}
 };
@@ -597,7 +606,7 @@ class Matrix {
 					for ($l = 0; $l < $this->base; $l++) {
 						$a = $v[$n * $this->base + $l];
 						if ($a !== NULL)
-							printf('%x', $a);
+							print(sudoku_ntoa($a));
 						else if ($e->is_set())
 							print('*');
 						else
