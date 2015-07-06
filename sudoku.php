@@ -147,7 +147,7 @@ class Element {
 		$a = array();
 		for ($i = 0; $i < $this->max; $i++)
 			$a[] = NULL;
-		$a[$this->value] = $v;
+		$a[$v] = $v;
 		return $a;
 	}
 
