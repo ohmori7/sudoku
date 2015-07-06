@@ -197,6 +197,12 @@ class Element {
 				$a[] = sudoku_ntoa($n);
 		return '(' . implode($a) . ')';
 	}
+
+	public function
+	a_to_s()
+	{
+		return "({$this->x},{$this->y})";
+	}
 };
 
 class Matrix {
@@ -374,8 +380,8 @@ class Matrix {
 			$xory = $e->x();
 		else
 			$xory = $e->y();
-		$this->log->info('Pruning ' . $e->to_s() . " in $unit for (" .
-		    $e->x() . ',' . $e->y() . ")\n");
+		$this->log->info('Pruning ' . $e->to_s() . " in $unit for " .
+		    $e->a_to_s() . "\n");
 		$cb = "foreach_$unit";
 		$this->$cb($xory, 'prune_cb', $v, $samelist);
 	}
@@ -399,8 +405,8 @@ class Matrix {
 		$coord = array($e->x(), $e->y());
 		$v = $e->get_array_without_null();
 
-		$this->log->info('Pruning ' . $e->to_s() . ' in box for (' .
-		    $e->x() . ',' . $e->y() . ")\n");
+		$this->log->info('Pruning ' . $e->to_s() . ' in box for ' .
+		    $e->a_to_s() . "\n");
 
 		$this->foreach_box($coord, 'prune_cb', $v, $samelist);
 	}
@@ -412,8 +418,8 @@ class Matrix {
 		foreach ($r as $e) {
 			if (! $e->is_set())
 				continue;
-			$this->log->info('Pruning ' . $e->get() .
-			    ' for (' . $e->x() . ',' . $e->y() .")\n");
+			$this->log->info('Pruning ' . $e->to_s() .
+			    ' for ' . $e->a_to_s() . "\n");
 			$this->prune_row(array($e));
 			$this->prune_column(array($e));
 			$this->prune_box(array($e));
