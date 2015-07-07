@@ -1,11 +1,17 @@
 <?php
 require_once('log.php');
 
+function
+sudoku_is_not_null($v)
+{
+	return ! is_null($v);
+}
+
 // similar to array_filter() but changes each key as well.
 function
 sudoku_array_filter($a)
 {
-	return array_values(array_filter($a));
+	return array_values(array_filter($a, 'sudoku_is_not_null'));
 }
 
 function
@@ -191,7 +197,7 @@ class Element {
 		$v = $this->value;
 		if (is_int($v))
 			return sudoku_ntoa($v);
-		$a = array_map('sudoku_ntoa', array_filter($v));
+		$a = array_map('sudoku_ntoa', sudoku_array_filter($v));
 		return '(' . implode($a) . ')';
 	}
 
