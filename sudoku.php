@@ -167,6 +167,12 @@ class Element {
 	}
 
 	public function
+	count()
+	{
+		return count($this->get_array_without_null());
+	}
+
+	public function
 	remove($v)
 	{
 		if ($this->is_set())
@@ -496,77 +502,50 @@ class Matrix {
 	}
 
 	private function
-	compare_elements($a, $b)
+	naked_check($e, &$samelist)
 	{
-
-		$av = $a->get_array_without_null();
-		$bv = $b->get_array_without_null();
-		$d = count($av) - count($bv);
-		if ($d !== 0)
-			return $d;
-		for ($i = 0; $i < count($av); $i++)
-			if ($av[$i] !== $bv[$i])
-				return $av[$i] - $bv[$i];
-		return 0;
-	}
-
-	private function
-	naked_prune($samelist)
-	{
-		if (count($samelist) < 2)
+		$o = $samelist[0];
+		if (strcmp($e->to_s(), $o->to_s()) !== 0)
 			return;
-		$e = $samelist[0];
-		$n = count($e->get_array_without_null());
-		if (count($samelist) < $n)
+		$samelist[] = $e;
+		$d = $o->count() - count($samelist);
+		$this->log->debug($o->a_to_s() . ': matches ' . $e->a_to_s() .
+		    ' on ' . $e->to_s() . " left $d element(s)\n");
+		if ($d > 0)
 			return;
-
-		while (($e = array_shift($samelist)) != NULL) {
-			$same_row = array($e);
-			$same_col = array($e);
-			$same_box = array($e);
-			foreach ($samelist as $other) {
-				if ($e === $other)
-					continue;
-				if ($e->is_same_row($other))
-					$same_row[] = $other;
-				if ($e->is_same_column($other))
-					$same_col[] = $other;
-				if ($e->is_same_box($other))
-					$same_box[] = $other;
-			}
-			if (count($same_row) === $n)
-				$this->prune_row($same_row);
-			if (count($same_col) === $n)
-				$this->prune_column($same_col);
-			if (count($same_box) === $n)
-				$this->prune_box($same_box);
-		}
+		if ($d < 0)
+			throw new UnexpectedValueException();
+		if ($e->is_same_row($o))
+			$this->prune_row($samelist);
+		if ($e->is_same_column($o))
+			$this->prune_column($samelist);
+		foreach ($samelist as $o)
+			if (! $e->is_same_box($o))
+				return;
+		$this->prune_box($samelist);
 	}
 
 	// naked pair/triple
 	// XXX: it is too easy... and under construction...
 	private function
-	naked()
+	naked($r)
 	{
-		$a = array();
-		foreach ($this->matrix as $e)
-			if (! $e->is_set())
-				$a[] = $e;
-
-		usort($a, array($this, 'compare_elements'));
-
-		$pe = NULL;
-		$samelist = array();
-		foreach ($a as $e) {
-			if ($pe === NULL || $this->compare_elements($e, $pe)) {
-				$pe = $e;
-				$this->naked_prune($samelist);
-				$samelist = array($e);
+		$this->log->info("== Start naked pruning\n");
+		foreach ($r as $e) {
+			if ($e->is_set())
 				continue;
-			}
-			$samelist[] = $e;
+			$this->log->debug($e->a_to_s() . ': ' . $e->to_s() .
+			    ": examine\n");
+			$a = array($e);
+			$this->foreach_row($e->x(), 'naked_check', $a, $e);
+			$a = array($e);
+			$this->foreach_column($e->y(), 'naked_check', $a, $e);
+			$a = array($e);
+			$this->foreach_box(array($e->x(), $e->y()),
+			    'naked_check', $a, $e);
 		}
-		$this->naked_prune($samelist);
+		$this->log->info("== Finished naked pruning\n");
+		$this->stat();
 	}
 
 	private function
@@ -578,10 +557,7 @@ class Matrix {
 				break;
 			$this->prune_by_sets($r);
 			$this->prune_by_candidates($r);
-			$this->log->info("== Start naked pruning\n");
-			$this->naked();
-			$this->log->info("== Finished naked pruning\n");
-			$this->stat();
+			$this->naked($r);
 		}
 	}
 
