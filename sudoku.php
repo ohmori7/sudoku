@@ -464,7 +464,7 @@ class Matrix {
 	}
 
 	private function
-	prune_candidates($e, $arg)
+	prune_candidates($e, &$arg)
 	{
 		foreach ($e->get_array_without_null() as $o)
 			$arg[$o] = NULL;
