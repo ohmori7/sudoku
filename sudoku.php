@@ -146,16 +146,16 @@ class Matrix {
 	}
 
 	private function
-	foreach_row_or_column($x_or_y, $cb, &$arg, $exclude, $isrow)
+	foreach_row_or_column($p, $cb, &$arg, $exclude, $isrow)
 	{
 		if (! is_array($exclude))
 			$exclude = array($exclude);
 
 		for ($i = 0; $i < $this->max; $i++) {
 			if ($isrow)
-				$e = $this->get($x_or_y, $i);
+				$e = $this->get($p->x(), $i);
 			else
-				$e = $this->get($i, $x_or_y);
+				$e = $this->get($i, $p->y());
 			if ($e->is_included($exclude))
 				continue;
 			$this->$cb($e, $arg);
@@ -163,25 +163,25 @@ class Matrix {
 	}
 
 	private function
-	foreach_row($x, $cb, &$arg, $exclude = array())
+	foreach_row($e, $cb, &$arg, $exclude = array())
 	{
-		$this->foreach_row_or_column($x, $cb, $arg, $exclude, true);
+		$this->foreach_row_or_column($e, $cb, $arg, $exclude, true);
 	}
 
 	private function
-	foreach_column($y, $cb, &$arg, $exclude = array())
+	foreach_column($e, $cb, &$arg, $exclude = array())
 	{
-		$this->foreach_row_or_column($y, $cb, $arg, $exclude, false);
+		$this->foreach_row_or_column($e, $cb, $arg, $exclude, false);
 	}
 
 	private function
-	foreach_box($coord, $cb, &$arg, $exclude = array())
+	foreach_box($e, $cb, &$arg, $exclude = array())
 	{
 		if (! is_array($exclude))
 			$exclude = array($exclude);
 
-		$xbase = $this->boxaddrbase($coord[0]);
-		$ybase = $this->boxaddrbase($coord[1]);
+		$xbase = $this->boxaddrbase($e->x());
+		$ybase = $this->boxaddrbase($e->y());
 		for ($i = 0; $i < $this->base; $i++)
 			for ($j = 0; $j < $this->base; $j++) {
 				$e = $this->get($xbase + $i, $ybase + $j);
@@ -207,10 +207,9 @@ class Matrix {
 	{
 		if (! $e->is_set())
 			return;
-		$this->foreach_row($e->x(), 'conflict_check', $e, $e);
-		$this->foreach_column($e->y(), 'conflict_check', $e, $e);
-		$this->foreach_box(array($e->x(), $e->y()), 'conflict_check',
-		    $e, $e);
+		$this->foreach_row($e, 'conflict_check', $e, $e);
+		$this->foreach_column($e, 'conflict_check', $e, $e);
+		$this->foreach_box($e, 'conflict_check', $e, $e);
 	}
 
 	private function
@@ -224,14 +223,10 @@ class Matrix {
 	{
 		$e = $exclude[0];
 		$v = $e->get_array_without_null();
-		if ($unit === 'row')
-			$xory = $e->x();
-		else
-			$xory = $e->y();
 		$this->log->info($e->a_to_s() . ': pruning ' . $e->to_s() .
 		    " in $unit\n");
 		$cb = "foreach_$unit";
-		$this->$cb($xory, 'prune_cb', $v, $exclude);
+		$this->$cb($e, 'prune_cb', $v, $exclude);
 	}
 
 	private function
@@ -250,13 +245,12 @@ class Matrix {
 	prune_box($exclude)
 	{
 		$e = $exclude[0];
-		$coord = array($e->x(), $e->y());
 		$v = $e->get_array_without_null();
 
 		$this->log->info($e->a_to_s() . ': pruning ' . $e->to_s() .
 		    " in box\n");
 
-		$this->foreach_box($coord, 'prune_cb', $v, $exclude);
+		$this->foreach_box($e, 'prune_cb', $v, $exclude);
 	}
 
 	private function
@@ -285,14 +279,8 @@ class Matrix {
 			return;
 		foreach (array('row', 'column', 'box') as $unit) {
 			$v = $e->get();
-			if ($unit === 'row')
-				$addr = $e->x();
-			else if ($unit === 'column')
-				$addr = $e->y();
-			else
-				$addr = array($e->x(), $e->y());
 			$cb = "foreach_$unit";
-			$this->$cb($addr, 'candidate_check', $v, $e);
+			$this->$cb($e, 'candidate_check', $v, $e);
 			$v = sudoku_array_filter($v);
 			if (count($v) === 1) {
 				$this->log->debug($e->a_to_s() .
@@ -335,12 +323,11 @@ class Matrix {
 			return;
 
 		$a = array($e);
-		$this->foreach_row($e->x(), 'naked_check', $a, $e);
+		$this->foreach_row($e, 'naked_check', $a, $e);
 		$a = array($e);
-		$this->foreach_column($e->y(), 'naked_check', $a, $e);
+		$this->foreach_column($e, 'naked_check', $a, $e);
 		$a = array($e);
-		$this->foreach_box(array($e->x(), $e->y()),
-		    'naked_check', $a, $e);
+		$this->foreach_box($e, 'naked_check', $a, $e);
 	}
 
 	public function
