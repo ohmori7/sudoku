@@ -33,8 +33,6 @@ class Matrix {
 				    new Element($i, $j, $base, $this->log);
 
 		$this->import($a);
-
-		$this->solve();
 	}
 
 	private function
@@ -317,7 +315,7 @@ class Matrix {
 		    'naked_check', $a, $e);
 	}
 
-	private function
+	public function
 	solve()
 	{
 		while ($modified = $this->get_modified()) {

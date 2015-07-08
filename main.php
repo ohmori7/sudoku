@@ -37,6 +37,7 @@ while ($arg = array_shift($argv))
 	if ($arg === '-v')
 		$m->log->increase_level();
 
+$m->solve();
 $m->dump();
 
 ?>
