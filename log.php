@@ -12,7 +12,7 @@ class Log {
 	private $level;
 
 	function
-	__construct($level = self::INFO)
+	__construct($level = self::NOTICE)
 	{
 		$this->level = $level;
 	}
