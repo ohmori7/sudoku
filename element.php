@@ -180,24 +180,18 @@ class Element {
 	{
 		if ($this->is_set())
 			return false;
-		if ($this->value[$v] === NULL)
+		if (is_null($this->value[$v]))
 			return false;
 		$this->value[$v] = NULL;	// XXX
 		$this->modified();
 		$this->log->info($this->a_to_s() . ': remove ' .
 		    sudoku_ntoa($v) . "\n");
 
-		$left = NULL;
-		for ($i = 0; $i < $this->max; $i++)
-			if ($this->value[$i] !== NULL) {
-				if ($left !== NULL)
-					goto out;
-				$left = $i;
-			}
-		if ($left === NULL)
+		$left = $this->get_array_without_null();
+		if (empty($left))
 			throw new BadMethodCallException();
-		$this->set($left);
-  out:
+		if (count($left) === 1)
+			$this->set($left[0]);
 		return true;
 	}
 
