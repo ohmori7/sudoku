@@ -31,12 +31,12 @@ $init = array(
 	array(N, N, C, N,	N, 2, F, 3,	N, N, N, 9,	N, 7, N, N),
 );
 
-$m = new Matrix($init);
-
+$log = new Log();
 while ($arg = array_shift($argv))
 	if ($arg === '-v')
-		$m->log->increase_level();
+		$log->increase_level();
 
+$m = new Matrix($init, $log);
 $m->solve();
 $m->dump();
 
