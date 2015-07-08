@@ -7,7 +7,7 @@ class Matrix {
 	private $matrix;
 	private $base;
 	private $max, $width, $height;
-	private $log;
+	public $log;
 
 	function
 	__construct($a, $loglevel = Log::NOTICE)

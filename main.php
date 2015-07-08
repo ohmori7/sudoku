@@ -32,5 +32,11 @@ $init = array(
 );
 
 $m = new Matrix($init);
+
+while ($arg = array_shift($argv))
+	if ($arg === '-v')
+		$m->log->increase_level();
+
 $m->dump();
+
 ?>

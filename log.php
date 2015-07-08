@@ -18,6 +18,14 @@ class Log {
 	}
 
 	public function
+	increase_level()
+	{
+		if ($this->level >= self::DEBUG)
+			return;
+		++$this->level;
+	}
+
+	public function
 	is_logging($level)
 	{
 		return $this->level >= $level;
