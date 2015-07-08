@@ -192,13 +192,13 @@ class Matrix {
 	}
 
 	private function
-	conflict_check($e, $ee)
+	conflict_check($e, $o)
 	{
 		if (! $e->is_set())
 			return;
-		if ($e->get() === $ee->get())
+		if ($e->get() === $o->get())
 			throw new UnexpectedValueException(
-			    $e->to_s() . ' on ' . $ee->a_to_s() .
+			    $e->to_s() . ' on ' . $o->a_to_s() .
 			    ' conflicts with ' . $e->a_to_s());
 	}
 
