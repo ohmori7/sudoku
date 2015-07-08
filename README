@@ -1,0 +1,14 @@
+# Sudoku
+
+## Abstract
+a program to solve a number place quiz, so called, ``Sudoku,'' in Japanese.
+
+## How to run
+You can run the program like below, and the answer will be given.
+
+    % php main.php [-v [-v]]
+
+Note that `-v' option inreases verbosity.  
+
+## BUG
+This program currently supports easy algorithms only, and may not be able to solve some other quizzes.  In addition, this program may have a bug.
