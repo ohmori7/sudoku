@@ -35,6 +35,10 @@ define('D',		0xd);
 define('E',		0xe);
 define('F',		0xf);
 
+/*
+ * below quiz is provided by Technology-Gym as follows:
+ *	http://tech-gym.com/2015/06/%E3%81%9D%E3%81%AE%E4%BB%96/1641.html
+ */
 $init = array(
 	array(N, 4, N, E,	N, 3, N, 0,	6, N, N, F,	N, N, C, N),
 	array(B, N, N, N,	N, N, 5, D,	N, A, N, N,	4, E, N, 7),
