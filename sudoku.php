@@ -10,7 +10,7 @@ class Matrix {
 	private $log;
 
 	function
-	__construct($a)
+	__construct($a, $loglevel = Log::NOTICE)
 	{
 
 		if (! is_array($a))
@@ -26,7 +26,7 @@ class Matrix {
 		$this->max = $this->width = $this->height = $max;
 		$this->matrix = array();
 	
-		$this->log = new Log(Log::DEBUG);
+		$this->log = new Log($loglevel);
 		for ($i = 0; $i < $this->height; $i++)
 			for ($j = 0; $j < $this->width; $j++)
 				$this->matrix[] =
