@@ -111,7 +111,8 @@ class Element {
 			    $v . ' from candidates ' . $this->to_s());
 		$this->value = $v;
 		$this->modified();
-		$this->log->info("Set $v on ({$this->x},{$this->y})\n");
+		$this->log->info($this->a_to_s() . ': set ' . $this->to_s() .
+		    "\n");
 		// XXX: should return left candidates???
 	}
 
@@ -158,7 +159,8 @@ class Element {
 			return false;
 		$this->value[$v] = NULL;	// XXX
 		$this->modified();
-		$this->log->info("Remove $v on ({$this->x},{$this->y})\n");
+		$this->log->info($this->a_to_s() . ': remove ' .
+		    sudoku_ntoa($v) . "\n");
 
 		$left = NULL;
 		for ($i = 0; $i < $this->max; $i++)

@@ -200,8 +200,8 @@ class Matrix {
 			$xory = $e->x();
 		else
 			$xory = $e->y();
-		$this->log->info('Pruning ' . $e->to_s() . " in $unit for " .
-		    $e->a_to_s() . "\n");
+		$this->log->info($e->a_to_s() . ': pruning ' . $e->to_s() .
+		    " in $unit\n");
 		$cb = "foreach_$unit";
 		$this->$cb($xory, 'prune_cb', $v, $exclude);
 	}
@@ -225,8 +225,8 @@ class Matrix {
 		$coord = array($e->x(), $e->y());
 		$v = $e->get_array_without_null();
 
-		$this->log->info('Pruning ' . $e->to_s() . ' in box for ' .
-		    $e->a_to_s() . "\n");
+		$this->log->info($e->a_to_s() . ': pruning ' . $e->to_s() .
+		    " in box\n");
 
 		$this->foreach_box($coord, 'prune_cb', $v, $exclude);
 	}
@@ -236,8 +236,8 @@ class Matrix {
 	{
 		if (! $e->is_set())
 			return;
-		$this->log->info('Pruning ' . $e->to_s() . ' for ' .
-		    $e->a_to_s() . "\n");
+		$this->log->info($e->a_to_s() . ': pruning ' . $e->to_s() .
+		    "\n");
 		$this->prune_row(array($e));
 		$this->prune_column(array($e));
 		$this->prune_box(array($e));
