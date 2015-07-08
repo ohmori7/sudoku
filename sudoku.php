@@ -405,9 +405,9 @@ class Matrix {
 	}
 
 	private function
-	prune_row_or_column($samelist, $unit)
+	prune_row_or_column($exclude, $unit)
 	{
-		$e = $samelist[0];
+		$e = $exclude[0];
 		$v = $e->get_array_without_null();
 		if ($unit === 'row')
 			$xory = $e->x();
@@ -416,32 +416,32 @@ class Matrix {
 		$this->log->info('Pruning ' . $e->to_s() . " in $unit for " .
 		    $e->a_to_s() . "\n");
 		$cb = "foreach_$unit";
-		$this->$cb($xory, 'prune_cb', $v, $samelist);
+		$this->$cb($xory, 'prune_cb', $v, $exclude);
 	}
 
 	private function
-	prune_row($samelist)
+	prune_row($exclude)
 	{
-		$this->prune_row_or_column($samelist, 'row');
+		$this->prune_row_or_column($exclude, 'row');
 	}
 
 	private function
-	prune_column($samelist)
+	prune_column($exclude)
 	{
-		$this->prune_row_or_column($samelist, 'column');
+		$this->prune_row_or_column($exclude, 'column');
 	}
 
 	private function
-	prune_box($samelist)
+	prune_box($exclude)
 	{
-		$e = $samelist[0];
+		$e = $exclude[0];
 		$coord = array($e->x(), $e->y());
 		$v = $e->get_array_without_null();
 
 		$this->log->info('Pruning ' . $e->to_s() . ' in box for ' .
 		    $e->a_to_s() . "\n");
 
-		$this->foreach_box($coord, 'prune_cb', $v, $samelist);
+		$this->foreach_box($coord, 'prune_cb', $v, $exclude);
 	}
 
 	private function
