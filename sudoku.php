@@ -7,7 +7,7 @@ class Matrix {
 	private $matrix;
 	private $base;
 	private $max, $width, $height;
-	public $log;
+	private $log;
 
 	function
 	__construct($a, $log = NULL)
