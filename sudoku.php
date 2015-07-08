@@ -337,6 +337,9 @@ class Matrix {
 	private function
 	stat()
 	{
+		if (! $this->log->is_logging(Log::INFO))
+			return;
+
 		$n = count($this->matrix);
 		$ncands = $n * $this->max;
 		$nsets = 0;
