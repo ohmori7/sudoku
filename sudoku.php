@@ -369,9 +369,7 @@ class Matrix {
 		$ybase = $this->boxaddrbase($coord[1]);
 		for ($i = 0; $i < $this->base; $i++)
 			for ($j = 0; $j < $this->base; $j++) {
-				$x = $xbase + $i;
-				$y = $ybase + $j;
-				$e = $this->get($x, $y);
+				$e = $this->get($xbase + $i, $ybase + $j);
 				if ($e->is_included($exclude))
 					continue;
 				$this->$cb($e, $arg);
@@ -407,7 +405,7 @@ class Matrix {
 	}
 
 	private function
-	prune_row_or_column($samelist, $unit = 'row')
+	prune_row_or_column($samelist, $unit)
 	{
 		$e = $samelist[0];
 		$v = $e->get_array_without_null();
@@ -447,57 +445,47 @@ class Matrix {
 	}
 
 	private function
-	prune_by_sets($r)
+	prune_by_sets($e)
 	{
-		$this->log->info("== Start to prune by set elements\n");
-		foreach ($r as $e) {
-			if (! $e->is_set())
-				continue;
-			$this->log->info('Pruning ' . $e->to_s() .
-			    ' for ' . $e->a_to_s() . "\n");
-			$this->prune_row(array($e));
-			$this->prune_column(array($e));
-			$this->prune_box(array($e));
-		}
-		$this->log->info("== Finish pruning by set elements\n");
-		$this->stat();
+		if (! $e->is_set())
+			return;
+		$this->log->info('Pruning ' . $e->to_s() . ' for ' .
+		    $e->a_to_s() . "\n");
+		$this->prune_row(array($e));
+		$this->prune_column(array($e));
+		$this->prune_box(array($e));
 	}
 
 	private function
-	prune_candidates($e, &$arg)
+	candidate_check($e, &$arg)
 	{
 		foreach ($e->get_array_without_null() as $o)
 			$arg[$o] = NULL;
 	}
 
 	private function
-	prune_by_candidates($modified)
+	prune_by_candidates($e)
 	{
-		$this->log->info("== Start to prune by candidates\n");
-		foreach ($modified as $e) {
-			if ($e->is_set())
-				continue;
-			foreach (array('row', 'column', 'box') as $unit) {
-				$v = $e->get();
-				if ($unit === 'row')
-					$addr = $e->x();
-				else if ($unit === 'column')
-					$addr = $e->y();
-				else
-					$addr = array($e->x(), $e->y());
-				$cb = "foreach_$unit";
-				$this->$cb($addr, 'prune_candidates', $v, $e);
-				$v = sudoku_array_filter($v);
-				if (count($v) === 1) {
-					$this->log->debug($e->a_to_s() .
-					    ": pruned by $unit\n");
-					$this->set($e, $v[0]);
-					break;
-				}
+		if ($e->is_set())
+			return;
+		foreach (array('row', 'column', 'box') as $unit) {
+			$v = $e->get();
+			if ($unit === 'row')
+				$addr = $e->x();
+			else if ($unit === 'column')
+				$addr = $e->y();
+			else
+				$addr = array($e->x(), $e->y());
+			$cb = "foreach_$unit";
+			$this->$cb($addr, 'candidate_check', $v, $e);
+			$v = sudoku_array_filter($v);
+			if (count($v) === 1) {
+				$this->log->debug($e->a_to_s() .
+				    ": pruned by $unit\n");
+				$this->set($e, $v[0]);
+				return;
 			}
 		}
-		$this->log->info("== Finish pruning by candidates\n");
-		$this->stat();
 	}
 
 	private function
@@ -525,38 +513,35 @@ class Matrix {
 	}
 
 	// naked pair/triple
-	// XXX: it is too easy... and under construction...
 	private function
-	naked($r)
+	prune_by_naked($e)
 	{
-		$this->log->info("== Start naked pruning\n");
-		foreach ($r as $e) {
-			if ($e->is_set())
-				continue;
-			$this->log->debug($e->a_to_s() . ': ' . $e->to_s() .
-			    ": examine\n");
-			$a = array($e);
-			$this->foreach_row($e->x(), 'naked_check', $a, $e);
-			$a = array($e);
-			$this->foreach_column($e->y(), 'naked_check', $a, $e);
-			$a = array($e);
-			$this->foreach_box(array($e->x(), $e->y()),
-			    'naked_check', $a, $e);
-		}
-		$this->log->info("== Finished naked pruning\n");
-		$this->stat();
+		if ($e->is_set())
+			return;
+
+		$a = array($e);
+		$this->foreach_row($e->x(), 'naked_check', $a, $e);
+		$a = array($e);
+		$this->foreach_column($e->y(), 'naked_check', $a, $e);
+		$a = array($e);
+		$this->foreach_box(array($e->x(), $e->y()),
+		    'naked_check', $a, $e);
 	}
 
 	private function
 	solve()
 	{
-		for (;;) {
-			$r = $this->get_modified();
-			if (empty($r))
-				break;
-			$this->prune_by_sets($r);
-			$this->prune_by_candidates($r);
-			$this->naked($r);
+		while ($modified = $this->get_modified()) {
+			$this->log->info("== Start pruning\n");
+			foreach ($modified as $e) {
+				$this->log->debug($e->a_to_s() . ': ' .
+				    $e->to_s() . ": examine\n");
+				$this->prune_by_sets($e);
+				$this->prune_by_candidates($e);
+				$this->prune_by_naked($e);
+			}
+			$this->log->info("== End pruning\n");
+			$this->stat();
 		}
 	}
 
