@@ -117,7 +117,7 @@ class Matrix {
 		for ($i = 0; $i < $this->height; $i++)
 			for ($j = 0; $j < $this->width; $j++) {
 				$v = $a[$i][$j];
-				if ($v === NULL)
+				if (is_null($v))
 					continue;
 				$e = $this->get($i, $j);
 				$this->set($e, $v);
@@ -440,7 +440,7 @@ class Matrix {
 					$v = $e->get_array();
 					for ($l = 0; $l < $this->base; $l++) {
 						$a = $v[$n * $this->base + $l];
-						if ($a !== NULL)
+						if (! is_null($a))
 							print(sudoku_ntoa($a));
 						else if ($e->is_set())
 							print('*');
