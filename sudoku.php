@@ -61,7 +61,7 @@ class Matrix {
 	{
 		$e->set($v);
 		if ($this->log->is_logging(Log::DEBUG)) {
-			$this->dump();
+			$this->dump_all();
 			$this->sanity_check($e);
 		}
 	}
@@ -74,7 +74,7 @@ class Matrix {
 		foreach ($vs as $v) {
 			$isremoved = $e->remove($v);
 			if ($isremoved && $this->log->is_logging(Log::DEBUG)) {
-				$this->dump();
+				$this->dump_all();
 				$this->sanity_check($e);
 			}
 			// XXX: should look into another element when
@@ -355,6 +355,35 @@ class Matrix {
 
 	public function
 	dump()
+	{
+		$bar = '';
+		for ($j = 0; $j < $this->width; $j++) {
+			if ($j % $this->base === 0)
+				$bar .= '+';
+			$bar .= '-';
+		}
+		$bar .= "+\n";
+
+		for ($i = 0; $i < $this->height; $i++) {
+			if ($i % $this->base === 0)
+				print($bar);
+			for ($j = 0; $j < $this->width; $j++) {
+				if ($j % $this->base === 0)
+					print('|');
+				$e = $this->get($i, $j);
+				$v = $e->get();
+				if (is_array($v))
+					print('*');
+				else
+					print(sudoku_ntoa($v));
+			}
+			print("|\n");
+		}
+		print($bar);
+	}
+
+	public function
+	dump_all()
 	{
 		$bar = '';
 		for ($i = 0; $i < $this->width; $i++) {
